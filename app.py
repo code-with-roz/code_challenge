@@ -31,7 +31,7 @@ df_c = get_chats()
 
 
 # ---- MAINPAGE ----
-st.title(":bar_chart: Covid Health Stats Dashboard")
+st.title(":bar_chart: WhatsApp Health Alerts Dashboard")
 st.markdown("##")
 
 
@@ -59,7 +59,7 @@ st.markdown("---")
 
 
 # ---- Add Graph ---------#
-
+color = ['#346888','#7aa6c2']
 df_inbound = df_m.loc[df_m['direction'] == 'inbound']
 df_outbound = df_m.loc[df_m['direction'] == 'outbound']
 df_inbound_tot = df_inbound.set_index('inserted_at').resample('w-mon', label='left').count().reset_index()
@@ -67,7 +67,8 @@ df_outbound_tot = df_outbound.set_index('inserted_at').resample('w-mon', label='
 message_bound_tot = pd.concat([df_outbound_tot.iloc[:,[0,3]], df_inbound_tot.iloc[:,3]], axis=1)
 message_bound_tot.columns = ['Week', 'Outbound', 'Inbound']
 
-fig = px.bar(message_bound_tot, x='Week', y=['Outbound', 'Inbound'], barmode='group', title='Weekly Inbound and Outbound messages')
+fig = px.bar(message_bound_tot, x='Week', y=['Outbound', 'Inbound'], barmode='group', 
+             title='Weekly Inbound vs Outbound messages', color_discrete_sequence=color)
 fig.update_layout(legend_title_text='Message Direction') 
 fig.update_xaxes(
     dtick="M1",
@@ -99,7 +100,8 @@ df_total= df_total.iloc[:,[0,2]]
 df_total = pd.concat([df_total, df_return.iloc[:,1]], axis=1)
 df_total.columns = ['Week', 'Total', 'Returning']
 #Plot Graph
-fig = px.bar(df_total, x='Week', y=['Total', 'Returning'], barmode='group', title='Weekly Returning and Total Users')
+fig = px.bar(df_total, x='Week', y=['Total', 'Returning'], barmode='group', 
+             title='Weekly Returning and Total Users', color_discrete_sequence=color)
 fig.update_layout(legend_title_text='Users') 
 fig.update_xaxes(
     dtick="M1",
@@ -109,6 +111,22 @@ fig.update_xaxes(
     title_text='Date')
     
 st.plotly_chart(fig)
+
+# ---- Pie chart showing retention rate ----
+count1 = df_m["returning"].value_counts()
+dff = pd.DataFrame()
+
+dff["name"]=[str(i) for i in count1.index]
+dff["number"] = count1.values
+fig_pie = px.pie(dff, values="number", 
+            names="name",
+            title="Returning Users vs Non-Returning Users",
+            color_discrete_sequence=color,
+            hole=0.3,
+            hover_data=["number"])
+fig_pie.update_traces(textposition='outside', textinfo='percent+label')
+    
+st.plotly_chart(fig_pie)
 
 
 # ---- HIDE STREAMLIT STYLE ----
