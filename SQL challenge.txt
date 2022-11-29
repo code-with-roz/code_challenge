@@ -1,0 +1,49 @@
+CREATE VIEW bigorders3 
+   AS SELECT item, amount
+   FROM Orders
+   WHERE amount >= (SELECT AVG(amount) FROM Orders);
+
+
+SELECT
+    c.name   
+    , MIN(ranking) 
+    , COUNT(*)
+FROM colleges c
+JOIN students s 
+   ON s.collegeID = c.ID 
+JOIN rankings r 
+   ON s.ID = r.studentID 
+   AND r.ranking <= 3
+   AND r.year = 2015
+GOUP BY c.name
+
+CREATE FUNCTION grades_class(students)
+RETURNS table
+AS 
+RETURN
+( 
+SELECT
+s.class_name,
+CAST(AVG(s.student_grade) AS DECIMAL(6,1)) AS 'Median'
+FROM
+   (
+     SELECT
+     student_name,
+     class_name,
+     student_grade,
+     ROW_NUMBER() OVER (
+     PARTITION BY class_name
+     ORDER BY student_grade ASC, ID ASC) AS RowAsc,
+     ROW_NUMBER() OVER (
+     PARTITION BY class_name
+     ORDER BY student_grade DESC, ID DESC) AS RowDesc
+     FROM students
+   ) AS s
+WHERE
+RowAsc IN (RowDesc, RowDesc - 1, RowDesc + 1)
+GROUP BY s.class_name
+)
+
+
+
+
