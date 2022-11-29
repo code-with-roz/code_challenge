@@ -1,9 +1,13 @@
-CREATE VIEW bigorders3 
-   AS SELECT item, amount
-   FROM Orders
-   WHERE amount >= (SELECT AVG(amount) FROM Orders);
+
+--- Q1 ---
+CREATE VIEW longRoads
+   AS SELECT name, length
+   FROM roads
+   WHERE length >= (SELECT AVG(length) FROM roads);
 
 
+
+--- Q2 ---
 SELECT
     c.name   
     , MIN(ranking) 
@@ -17,32 +21,66 @@ JOIN rankings r
    AND r.year = 2015
 GOUP BY c.name
 
-CREATE FUNCTION grades_class(students)
-RETURNS table
+
+
+
+--- Q3 ---
+CREATE TYPE students_table AS TABLE
+(
+	Class VARCHAR(20),
+	FirstName VARCHAR(20),
+	Grade INT
+);
+
+
+
+CREATE FUNCTION class_grades(@InputTable students_table READONLY)
+RETURNS TABLE
 AS 
 RETURN
-( 
-SELECT
-s.class_name,
-CAST(AVG(s.student_grade) AS DECIMAL(6,1)) AS 'Median'
-FROM
-   (
-     SELECT
-     student_name,
-     class_name,
-     student_grade,
-     ROW_NUMBER() OVER (
-     PARTITION BY class_name
-     ORDER BY student_grade ASC, ID ASC) AS RowAsc,
-     ROW_NUMBER() OVER (
-     PARTITION BY class_name
-     ORDER BY student_grade DESC, ID DESC) AS RowDesc
-     FROM students
-   ) AS s
-WHERE
-RowAsc IN (RowDesc, RowDesc - 1, RowDesc + 1)
-GROUP BY s.class_name
+	SELECT
+	s.Class,
+	CAST(AVG(s.Grade) AS DECIMAL(6,1)) AS 'Median'
+	FROM
+	   (
+		 SELECT
+		 FirstName,
+		 Class,
+		 Grade,
+		 ROW_NUMBER() OVER (
+		 PARTITION BY Class
+		 ORDER BY Grade ASC, ID ASC) AS RowAsc,
+		 ROW_NUMBER() OVER (
+		 PARTITION BY Class
+		 ORDER BY Grade DESC, ID DESC) AS RowDesc
+		 FROM students
+	   ) AS s
+	WHERE
+	RowAsc IN (RowDesc, RowDesc - 1, RowDesc + 1)
+	GROUP BY s.Class
+
+
+CREATE TABLE students1 (
+   Class varchar(50),
+   FirstName varchar(50),
+   Grade decimal(5,1)
 )
+
+INSERT INTO students1 
+VALUES ('Math', 'Bob', 65),
+		('Math', 'Joe', 72),
+        ('Math', 'Sally', 95),
+        ('Science', 'Bob', 65),
+        ('Science', 'Joe', 81),
+        ('Science', 'Sally', 81),
+        ('Science', 'Mike', 72);
+
+DECLARE @Tab AS students_table
+INSERT @Tab 
+SELECT * FROM students1
+
+SELECT * FROM class_grades(@Tab)
+
 
 
 
