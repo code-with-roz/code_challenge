@@ -109,7 +109,7 @@ fig.update_xaxes(
     hoverformat="%b %d, %Y",
     ticklabelmode="period",
     title_text='Date')
-    
+
 st.plotly_chart(fig)
 
 # ---- Pie chart showing retention rate ----
@@ -125,7 +125,11 @@ fig_pie = px.pie(dff, values="number",
             hole=0.3,
             hover_data=["number"])
 fig_pie.update_traces(textposition='outside', textinfo='percent+label')
-    
+retention_rate = round((dff['number'].iloc[0]/dff['number'].sum())*100)
+
+st.subheader("Retention Rate")
+st.subheader(f"{retention_rate}%")
+
 st.plotly_chart(fig_pie)
 
 
